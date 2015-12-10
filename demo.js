@@ -9,12 +9,13 @@ Exp = function(setup) {
     self.tick(t);
     window.requestAnimationFrame(self.ticker, self.renderer.domElement);
   };
-  
+
   this.resizer = function(ev) {
     self.resize(window.innerWidth, window.innerHeight);
   };
 
-  // if (window !== top) { 
+  // if (window !== top) {
+
     this.startButton = document.createElement('button');
     document.body.appendChild(this.startButton);
     this.startButton.style.position = 'absolute';
@@ -61,16 +62,14 @@ Exp = function(setup) {
 };
 
 Exp.prototype = {
-  previousTime : 0,
-  maxTimeDelta : 60,
-  playing : false,
-
-  positionEnabled : true,
-  velocityEnabled : true,
-  orientationEnabled : true,
-  environmentEnabled : true,
-
-  initComplete : false,
+  previousTime:       0,
+  maxTimeDelta:       60,
+  playing:            false,
+  positionEnabled:    true,
+  velocityEnabled:    true,
+  orientationEnabled: true,
+  environmentEnabled: true,
+  initComplete:       false,
 
   init : function() {
     this.initComplete = true;
@@ -83,10 +82,8 @@ Exp.prototype = {
   setupRenderer : function() {
     this.renderer = new THREE.WebGLRenderer();
     this.listenToResize();
-    
+
     var s = this.renderer.domElement.style;
-    // s.position = 'absolute';
-    // s.left = s.top = '0px';
     document.body.appendChild(this.renderer.domElement);
   },
 
@@ -139,12 +136,12 @@ Exp.prototype = {
     a.context       = new AudioContext();
     a.convolver     = a.context.createConvolver();
     a.volume        = a.context.createGain();
-    
+
     a.mixer         = a.context.createGain();
-    
+
     a.flatGain      = a.context.createGain();
     a.convolverGain = a.context.createGain();
-    
+
     a.destination   = a.mixer;
     a.mixer.connect(a.flatGain);
     //a.mixer.connect(a.convolver);
@@ -189,7 +186,7 @@ Exp.prototype = {
     request.open("GET", soundFileName, true);
     request.responseType = "arraybuffer";
     var ctx              = this.audio.context;
-    
+
     request.onload       = function() {
       ctx.decodeAudioData(request.response, callback, function() {
         alert("Decoding the audio buffer failed");
@@ -290,22 +287,81 @@ Exp.prototype = {
     var cube    = new THREE.Mesh(cubeGeo, cubeMat);
     this.cube   = cube;
     this.cube.name = "light it up"
-    
+
     var cubeGeo2 = new THREE.BoxGeometry(1.20,1.20,2.00);
     var cubeMat2 = new THREE.MeshLambertMaterial({color: 0xFFFF00});
     var cube2    = new THREE.Mesh(cubeGeo2, cubeMat2);
     this.cube2   = cube2;
     this.cube2.name = "all my love"
 
-    this.scene.add(cube);
-    this.scene.add(cube2);
 
-    console.log(this.cube)
 
-    this.cube.position.z = -50
+    this.sphereFromCube1 = new THREE.Mesh(
+        new THREE.SphereGeometry(40, 32, 32),
+        new THREE.MeshBasicMaterial(
+          {
+            color: 0x0040ff,
+            side: THREE.DoubleSide,
+            wireframe: true
+          }
+        )
+    );
+
+    this.sphereFromCube2 = new THREE.Mesh(
+        new THREE.SphereGeometry(40, 32, 32),
+        new THREE.MeshBasicMaterial(
+          {
+            color: 0xff0040,
+            side: THREE.DoubleSide,
+            wireframe: true
+          }
+        )
+    );
+
+
+    this.spotLightMesh = new THREE.SphereGeometry( 0.5, 16, 8 );
+    this.colorLight1   = 0x0040ff;
+    this.colorLight2   = 0xff0040;
+
+    this.light1 = new THREE.PointLight( this.colorLight1, 2, 500, 50 );
+    this.light1.add( new THREE.Mesh( this.spotLightMesh, new THREE.MeshBasicMaterial( { color: this.colorLight1 } ) ) );
+
+    this.light2 = new THREE.PointLight( this.colorLight2, 2, 500, 50 );
+    this.light2.add( new THREE.Mesh( this.spotLightMesh, new THREE.MeshBasicMaterial( { color: this.colorLight2 } ) ) );
+
+    this.scene.add(this.cube);
+    this.scene.add(this.cube2);
+    this.scene.add(this.sphereFromCube1);
+    this.scene.add(this.sphereFromCube2);
+    this.scene.add(this.light1);
+    this.scene.add(this.light2);
+
+    this.cube.position.z  = -50
     this.cube2.position.z = 50
 
-    this.cube.rotation.y = -Math.PI / 4
+
+    console.log(this.cube.position, this.cube2.position)
+
+    this.light1.position.x          = 0
+    this.light1.position.y          = 0
+    this.light1.position.z          = 0
+
+
+    this.light2.position.x          = 0
+    this.light2.position.y          = 0
+    this.light2.position.z          = 100
+
+    this.sphereFromCube1.position.x = 0
+    this.sphereFromCube1.position.y = 0
+    this.sphereFromCube1.position.z = 0
+
+    this.sphereFromCube2.position.x = 0
+    this.sphereFromCube2.position.y = 0
+    this.sphereFromCube2.position.z = 100
+
+    console.log(this.sphereFromCube2.position, this.sphereFromCube1.position)
+
+    this.cube.rotation.y  = -Math.PI / 4
     this.cube2.rotation.y = Math.PI / 4
 
     var light        = new THREE.PointLight(0xFFFFFF);
@@ -315,37 +371,36 @@ Exp.prototype = {
     this.light       = light;
     this.scene.add(light);
 
-    // var hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-    // this.scene.add( hemiLight );
 
     var plane = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(20, 200, 20, 200),
+      new THREE.PlaneBufferGeometry(2000, 2000, 2000, 2000),
       new THREE.MeshLambertMaterial({color: 0xffffff})
     );
     plane.position.y = -5.0;
     plane.rotation.x = -Math.PI / 2;
     this.scene.add(plane);
 
-    cube.sound  = this.loadSound('light-it-up.mp3');
-    cube2.sound = this.loadSound('all-my-love.mp3');
+    // cube.sound  = this.loadSound('light-it-up.mp3');
+    // cube2.sound = this.loadSound('all-my-love.mp3');
+    cube.sound  = this.loadSound('tinush.mp3');
+    cube2.sound = this.loadSound('barbes.mp3');
     if (this.orientationEnabled) {
       this.createSoundCone(cube, 10, 10.5, 0.001);
-      this.createSoundCone(cube2, 10, 10.5, 0.001); // grande portée , presque ciruclaire ? 
-      // this.createSoundCone(cube2, 0.5, 1.5, 0.001); // petit cone sympa 
+      this.createSoundCone(cube2, 10, 10.5, 0.001); // grande portée , presque ciruclaire ?
+      // this.createSoundCone(cube2, 0.5, 1.5, 0.001); // petit cone sympa
       // this.createSoundCone(cube2, 1.0, 3.8, 0.001);
     }
 
     this.keyForward = this.keyBackward = this.keyLeft = this.keyRight = false;
     var self = this;
-
     var down = false;
     var mx   = 0;
     var my   = 0;
     this.camera.target = new THREE.Object3D();
-    
+
     this.xangle = Math.PI;
     this.yangle = 0;
- 
+
     window.addEventListener('mousedown', function(ev) {
       mx   = ev.clientX;
       my   = ev.clientY;
@@ -357,7 +412,6 @@ Exp.prototype = {
     window.addEventListener('mousemove', function(ev) {
       if (down) {
         var dx      = ev.clientX - mx;
-        // console.log(ev.clientX, mx, dx)
         var dy      = ev.clientY - my;
         mx          = ev.clientX;
         my          = ev.clientY;
